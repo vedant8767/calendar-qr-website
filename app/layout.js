@@ -1,21 +1,18 @@
-import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import { Poppins, Playfair_Display } from "next/font/google";
 import BottomNav from "@/components/BottomNav";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Display face for big headings only — an elegant serif, kept restrained.
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  axes: ["SOFT", "opsz"],
+  style: ["normal", "italic"],
 });
 
 export const metadata = {
@@ -29,13 +26,15 @@ export const metadata = {
 
 export const viewport = {
   themeColor: "#f7f4ee",
+  // Lets env(safe-area-inset-*) work so the bottom nav clears the iPhone home bar.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${poppins.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="grain min-h-full flex flex-col font-sans">
         <div className="flex-1 pb-28">{children}</div>

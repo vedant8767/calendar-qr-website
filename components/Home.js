@@ -10,7 +10,7 @@ import { CampaignIcon } from "./icons";
 
 const spring = { type: "spring", stiffness: 220, damping: 26 };
 
-export default function Home() {
+export default function Home({ news }) {
   const featured = months[useFeaturedMonthIndex() ?? 0];
 
   return (
@@ -139,6 +139,8 @@ export default function Home() {
           ))}
         </ul>
       </section>
+
+      {news}
 
       <BodyTeaser />
 
@@ -289,10 +291,10 @@ function RotatingBadge() {
           <path id="badge-circle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" />
         </defs>
         <circle cx="100" cy="100" r="98" fill="var(--ink)" />
-        <text fill="var(--paper)" fontSize="17" fontFamily="var(--font-geist-mono)" letterSpacing="5">
+        <text fill="var(--paper)" fontSize="17" fontFamily="var(--font-poppins)" letterSpacing="5">
           <textPath href="#badge-circle">CALENDAR · QUIZ · STARS · HEALTH ·</textPath>
         </text>
-        <text x="100" y="114" textAnchor="middle" fontSize="44" fill="var(--paper)" fontFamily="var(--font-fraunces)" fontStyle="italic">
+        <text x="100" y="114" textAnchor="middle" fontSize="44" fill="var(--paper)" fontFamily="var(--font-playfair)" fontStyle="italic">
           ✦
         </text>
       </svg>

@@ -6,6 +6,7 @@ import { Heart, Briefcase, Leaf, Sparkles, Search } from "lucide-react";
 import { elements, findSign, signs } from "@/lib/zodiac";
 import { months, YEAR } from "@/lib/months";
 import { useToday } from "@/lib/useToday";
+import BirthdayTwins from "./BirthdayTwins";
 
 const OUTLOOK_TABS = [
   { key: "love", label: "Love", icon: Heart },
@@ -25,6 +26,8 @@ export default function HoroscopeExplorer() {
   const [picked, setPicked] = useState(null);
   const [rotation, setRotation] = useState(null);
   const [filter, setFilter] = useState("All");
+  const [dob, setDob] = useState({ month: "", day: "", year: "" });
+  const dobValid = dob.month && dob.day && Number(dob.day) <= daysIn(Number(dob.month), dob.year ? Number(dob.year) : undefined);
 
   const sign = signs.find((s) => s.slug === picked) ?? todaySign ?? signs[0];
   const signIndex = signs.indexOf(sign);
@@ -82,8 +85,18 @@ export default function HoroscopeExplorer() {
 
         <div className="mt-10 grid items-center gap-10 lg:grid-cols-2">
           <Wheel sign={sign} rotation={wheelRotation} onSelect={select} />
-          <BirthdayFinder onFound={(slug) => select(slug, { scroll: true })} />
+          <BirthdayFinder
+            dob={dob}
+            onChange={setDob}
+            onFound={(slug) => select(slug, { scroll: true })}
+          />
         </div>
+
+        {dobValid && (
+          <BirthdayTwins
+            dob={{ day: Number(dob.day), month: Number(dob.month), year: dob.year ? Number(dob.year) : null }}
+          />
+        )}
 
         <section aria-label="All signs" className="mt-14">
           <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:justify-center sm:px-0">
@@ -229,10 +242,17 @@ function Wheel({ sign, rotation, onSelect }) {
   );
 }
 
-function BirthdayFinder({ onFound }) {
-  const [month, setMonth] = useState("");
-  const [day, setDay] = useState("");
-  const daysInMonth = month ? new Date(2024, Number(month), 0).getDate() : 31; // leap year: allow 29 Feb
+// Leap year so 29 Feb is selectable when no year is chosen.
+function daysIn(month, year = 2024) {
+  return month ? new Date(year, month, 0).getDate() : 31;
+}
+
+const BIRTH_YEARS = Array.from({ length: YEAR - 1930 }, (_, i) => YEAR - 1 - i);
+
+function BirthdayFinder({ dob, onChange, onFound }) {
+  const { month, day, year } = dob;
+  const set = (key) => (e) => onChange({ ...dob, [key]: e.target.value });
+  const daysInMonth = daysIn(Number(month), year ? Number(year) : undefined);
   const found = month && day && Number(day) <= daysInMonth ? findSign(Number(month), Number(day)) : null;
 
   const field =
@@ -247,14 +267,14 @@ function BirthdayFinder({ onFound }) {
       className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur sm:p-8"
     >
       <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-white/50">
-        <Search className="size-4" /> Find your sign
+        <Search className="size-4" /> Find your sign &amp; birthday twins
       </p>
       <h2 className="mt-3 font-display text-3xl font-semibold leading-tight">When&apos;s your birthday?</h2>
 
-      <div className="mt-6 grid grid-cols-[1.4fr_1fr] gap-3">
+      <div className="mt-6 grid grid-cols-[1.4fr_1fr] gap-3 sm:grid-cols-[1.4fr_0.9fr_1.1fr]">
         <label className="block">
           <span className="sr-only">Birth month</span>
-          <select value={month} onChange={(e) => setMonth(e.target.value)} className={field}>
+          <select value={month} onChange={set("month")} className={field}>
             <option value="">Month</option>
             {months.map((m) => (
               <option key={m.slug} value={m.index + 1}>
@@ -265,11 +285,22 @@ function BirthdayFinder({ onFound }) {
         </label>
         <label className="block">
           <span className="sr-only">Birth day</span>
-          <select value={day} onChange={(e) => setDay(e.target.value)} className={field}>
+          <select value={day} onChange={set("day")} className={field}>
             <option value="">Day</option>
             {Array.from({ length: daysInMonth }, (_, i) => (
               <option key={i + 1} value={i + 1}>
                 {i + 1}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="col-span-2 block sm:col-span-1">
+          <span className="sr-only">Birth year (optional)</span>
+          <select value={year} onChange={set("year")} className={field}>
+            <option value="">Year (optional)</option>
+            {BIRTH_YEARS.map((y) => (
+              <option key={y} value={y}>
+                {y}
               </option>
             ))}
           </select>

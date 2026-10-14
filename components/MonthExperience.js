@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Brain, ChevronLeft, ChevronRight, PersonStanding } from "lucide-react";
+import { ArrowRight, Brain, Cake, ChevronLeft, ChevronRight, PersonStanding, Sparkles } from "lucide-react";
 import { buildMonthGrid, eventsOnDay, months, themeStyle, typeLabels, YEAR } from "@/lib/months";
+import { getGreeting, greetingsOnDay } from "@/lib/egreets";
 import { useToday } from "@/lib/useToday";
+import EGreetDialog from "./EGreetDialog";
 import { CampaignIcon } from "./icons";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -21,6 +23,7 @@ const rise = {
 
 export default function MonthExperience({ month, prev, next, quizTopic }) {
   const [selected, setSelected] = useState(null);
+  const [greeting, setGreeting] = useState(null);
   const today = useToday();
   const isThisMonth = today?.year === YEAR && today?.month === month.index;
 
@@ -35,6 +38,7 @@ export default function MonthExperience({ month, prev, next, quizTopic }) {
             selected={selected}
             onSelect={setSelected}
             todayDay={isThisMonth ? today.day : null}
+            onGreet={setGreeting}
           />
         </div>
         <div className="mt-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0">
@@ -46,6 +50,7 @@ export default function MonthExperience({ month, prev, next, quizTopic }) {
       </main>
 
       <MonthStrip current={month.slug} />
+      <EGreetDialog greeting={greeting} onClose={() => setGreeting(null)} />
     </div>
   );
 }
@@ -171,9 +176,10 @@ function PagerButton({ href, label, children }) {
   );
 }
 
-function CalendarCard({ month, selected, onSelect, todayDay }) {
+function CalendarCard({ month, selected, onSelect, todayDay, onGreet }) {
   const weeks = buildMonthGrid(YEAR, month.index);
   const events = selected ? eventsOnDay(month, selected) : [];
+  const greetings = selected ? greetingsOnDay(YEAR, month.index, selected) : [];
 
   return (
     <motion.section
@@ -188,9 +194,14 @@ function CalendarCard({ month, selected, onSelect, todayDay }) {
         <h2 className="font-display text-xl font-semibold">
           {month.name} <span className="text-muted">{YEAR}</span>
         </h2>
-        <p className="flex items-center gap-1.5 text-xs text-muted">
-          <span className="size-2 rounded-full bg-accent" /> Health day
-        </p>
+        <div className="flex items-center gap-3 text-xs text-muted">
+          <p className="flex items-center gap-1.5">
+            <span className="size-2 rounded-full bg-accent" /> Health day
+          </p>
+          <p className="flex items-center gap-1.5">
+            <Sparkles className="size-3 text-amber-500" /> E-greet
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center">
@@ -207,6 +218,7 @@ function CalendarCard({ month, selected, onSelect, todayDay }) {
         {weeks.flat().map((day, i) => {
           if (!day) return <div key={`pad-${i}`} />;
           const dayEvents = eventsOnDay(month, day);
+          const dayGreetings = greetingsOnDay(YEAR, month.index, day);
           const hasSingle = dayEvents.some((e) => !e.endDay);
           const hasRange = dayEvents.some((e) => e.endDay);
           const isSunday = i % 7 === 0;
@@ -216,18 +228,20 @@ function CalendarCard({ month, selected, onSelect, todayDay }) {
             <button
               key={day}
               type="button"
-              disabled={!dayEvents.length}
+              disabled={!dayEvents.length && !dayGreetings.length}
               onClick={() => onSelect(isSelected ? null : day)}
               aria-pressed={isSelected}
-              aria-label={`${day} ${month.name}${dayEvents.length ? `: ${dayEvents.map((e) => e.title).join(", ")}` : ""}`}
+              aria-label={`${day} ${month.name}${dayEvents.length + dayGreetings.length ? `: ${[...dayEvents, ...dayGreetings].map((e) => e.title).join(", ")}` : ""}`}
               className={`relative grid aspect-square place-items-center rounded-2xl text-[15px] tabular-nums transition sm:text-base ${
                 hasSingle
                   ? "cursor-pointer bg-accent font-semibold text-white hover:brightness-110"
                   : hasRange
                     ? "cursor-pointer bg-accent-soft font-medium text-accent-deep hover:brightness-95"
-                    : isSunday
-                      ? "text-accent"
-                      : "text-ink/80"
+                    : dayGreetings.length
+                      ? "cursor-pointer bg-amber-50 font-semibold text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100"
+                      : isSunday
+                        ? "text-accent"
+                        : "text-ink/80"
               }`}
             >
               {isSelected && (
@@ -241,6 +255,9 @@ function CalendarCard({ month, selected, onSelect, todayDay }) {
                 <span className="absolute inset-x-0 bottom-1 mx-auto h-0.5 w-4 rounded-full bg-current" />
               )}
               <span className="relative">{day}</span>
+              {dayGreetings.length > 0 && (
+                <Sparkles className="absolute left-1 top-1 size-3 text-amber-400" aria-hidden />
+              )}
               {dayEvents.length > 1 && (
                 <span className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-ink text-[9px] font-bold text-white">
                   {dayEvents.length}
@@ -253,7 +270,7 @@ function CalendarCard({ month, selected, onSelect, todayDay }) {
 
       <div className="mt-4 min-h-14">
         <AnimatePresence mode="wait" initial={false}>
-          {events.length ? (
+          {events.length || greetings.length ? (
             <motion.div
               key={selected}
               initial={{ opacity: 0, y: 8 }}
@@ -278,6 +295,23 @@ function CalendarCard({ month, selected, onSelect, todayDay }) {
                   <ArrowRight className="size-4 shrink-0 text-muted transition group-hover:translate-x-1 group-hover:text-accent" />
                 </a>
               ))}
+              {greetings.map((g) => (
+                <button
+                  key={g.title}
+                  type="button"
+                  onClick={() => onGreet(g)}
+                  className="group flex w-full items-center justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-left text-sm transition hover:bg-amber-100"
+                >
+                  <span>
+                    <span className="font-mono text-xs text-amber-700">
+                      {WEEKDAYS[new Date(YEAR, month.index, selected).getDay()]}, {selected}{" "}
+                      {month.short} · {g.title}
+                    </span>
+                    <span className="block font-semibold">Create your e-greeting</span>
+                  </span>
+                  <Sparkles className="size-4 shrink-0 text-amber-500 transition group-hover:scale-125" />
+                </button>
+              ))}
             </motion.div>
           ) : (
             <motion.p
@@ -292,6 +326,14 @@ function CalendarCard({ month, selected, onSelect, todayDay }) {
           )}
         </AnimatePresence>
       </div>
+
+      <button
+        type="button"
+        onClick={() => onGreet(getGreeting("Birthday"))}
+        className="mt-2 inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-medium transition hover:border-accent hover:text-accent"
+      >
+        <Cake className="size-4" /> Make a birthday e-greet
+      </button>
     </motion.section>
   );
 }
