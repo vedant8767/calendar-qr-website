@@ -2,11 +2,19 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, Brain, CalendarDays, Rotate3d, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Brain,
+  CalendarDays,
+  Rotate3d,
+  Sparkles,
+} from "lucide-react";
 import { months, YEAR } from "@/lib/months";
 import { organs } from "@/lib/organs";
 import { useFeaturedMonthIndex } from "@/lib/useToday";
 import { CampaignIcon } from "./icons";
+import DoctorCard from "./DoctorCard";
 
 const spring = { type: "spring", stiffness: 220, damping: 26 };
 
@@ -15,81 +23,50 @@ export default function Home({ news }) {
 
   return (
     <div className="overflow-x-clip">
-      <section className="relative px-4 pb-14 pt-6 sm:px-6">
+      <section className="relative px-4 pb-8 pt-6 sm:px-6">
         <ColorOrbs />
         <div className="relative mx-auto max-w-6xl">
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-muted">
-            Scan · Learn · Stay well
-          </p>
-
-          <div className="relative mt-12 sm:mt-20">
+          <div className="relative mt-1 sm:mt-16">
+            {/* One line at every width: the size scales with the viewport. */}
             <motion.h1
-              initial="hidden"
-              animate="show"
-              variants={{ show: { transition: { staggerChildren: 0.08 } } }}
-              className="font-display font-semibold leading-[0.85] tracking-tight"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={spring}
+              className="whitespace-nowrap font-display text-[clamp(1.75rem,8.6vw,5.5rem)] font-semibold leading-none tracking-tight"
             >
-              {["Health", "Calendar"].map((word, i) => (
-                <motion.span
-                  key={word}
-                  variants={{ hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0, transition: spring } }}
-                  className={`block text-[clamp(4rem,18vw,10rem)] ${i ? "italic" : ""}`}
-                >
-                  {word}
-                </motion.span>
-              ))}
-              <motion.span
-                variants={{ hidden: { opacity: 0, x: -30 }, show: { opacity: 1, x: 0, transition: spring } }}
-                className="block text-[clamp(4rem,18vw,10rem)] font-light"
-              >
-                {String(YEAR)
-                  .split("")
-                  .map((d, i) => (
-                    <span key={i} style={{ color: months[i * 3 + 1].theme.accent }}>
-                      {d}
-                    </span>
-                  ))}
-              </motion.span>
+              Health Calendar {YEAR}
             </motion.h1>
             <RotatingBadge />
           </div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8 max-w-md text-lg leading-relaxed text-muted"
-          >
-            Every month, a health cause worth knowing. Tap through the observances, test yourself
-            with a quick quiz, and see what the stars say.
-          </motion.p>
-
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, ...spring }}
-            className="mt-8 flex flex-wrap gap-3"
+            transition={{ delay: 0.3, ...spring }}
+            className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:flex"
           >
             <Link
               href={`/${featured.slug}`}
               style={{ "--f": featured.theme.accent }}
-              className="group inline-flex items-center gap-2 rounded-full bg-[var(--f)] px-6 py-4 font-semibold text-white shadow-lg shadow-black/10 transition hover:gap-3"
+              className="group inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-[var(--f)] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-black/10 transition hover:gap-2.5 sm:gap-2 sm:px-6 sm:py-4 sm:text-base"
             >
-              <CalendarDays className="size-5" />
-              Open {featured.name}
+              <CalendarDays className="size-[18px] sm:size-5" />
+              Open {featured.short}
               <ArrowRight className="size-4" />
             </Link>
             <Link
               href="/horoscope"
-              className="inline-flex items-center gap-2 rounded-full border border-ink/15 bg-white px-6 py-4 font-semibold transition hover:border-ink"
+              className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-ink/15 bg-white px-4 py-3 text-sm font-semibold transition hover:border-ink sm:gap-2 sm:px-6 sm:py-4 sm:text-base"
             >
-              <Sparkles className="size-5" /> Horoscope
+              <Sparkles className="size-[18px] sm:size-5" /> Horoscope
             </Link>
           </motion.div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 sm:px-6" aria-labelledby="months-heading">
+      <DoctorCard />
+
+      {/* <section className="mx-auto mt-16 max-w-6xl px-4 sm:px-6" aria-labelledby="months-heading">
         <div className="mb-6 flex items-end justify-between gap-4">
           <h2 id="months-heading" className="font-display text-4xl font-semibold leading-none sm:text-5xl">
             12 months,
@@ -138,13 +115,13 @@ export default function Home({ news }) {
             </motion.li>
           ))}
         </ul>
-      </section>
+      </section> */}
 
       {news}
 
       <BodyTeaser />
 
-      <section className="mx-auto mt-16 grid max-w-6xl gap-3 px-4 sm:grid-cols-3 sm:px-6">
+      {/* <section className="mx-auto mt-16 grid max-w-6xl gap-3 px-4 sm:grid-cols-3 sm:px-6">
         {[
           {
             icon: CalendarDays,
@@ -184,11 +161,12 @@ export default function Home({ news }) {
             </Link>
           </motion.div>
         ))}
-      </section>
+      </section> */}
 
-      <footer className="mx-auto mt-16 max-w-6xl px-4 text-xs leading-relaxed text-muted sm:px-6">
-        Information is for general awareness and doesn&apos;t replace advice from your doctor.
-      </footer>
+      {/* <footer className="mx-auto mt-16 max-w-6xl px-4 text-xs leading-relaxed text-muted sm:px-6">
+        Information is for general awareness and doesn&apos;t replace advice
+        from your doctor.
+      </footer> */}
     </div>
   );
 }
@@ -207,8 +185,15 @@ function BodyTeaser() {
           aria-hidden
           className="absolute -right-16 -top-16 size-72 rounded-full blur-3xl"
           style={{ background: organs[0].color }}
-          animate={{ scale: [1, 1.12, 1, 1.06, 1], opacity: [0.35, 0.55, 0.35, 0.45, 0.35] }}
-          transition={{ duration: 0.83, repeat: Infinity, times: [0, 0.1, 0.25, 0.32, 0.5] }}
+          animate={{
+            scale: [1, 1.12, 1, 1.06, 1],
+            opacity: [0.35, 0.55, 0.35, 0.45, 0.35],
+          }}
+          transition={{
+            duration: 0.83,
+            repeat: Infinity,
+            times: [0, 0.1, 0.25, 0.32, 0.5],
+          }}
         />
         <div className="relative grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-end">
           <div>
@@ -219,8 +204,8 @@ function BodyTeaser() {
               Inside <span className="italic text-[#ff6b7f]">you.</span>
             </h2>
             <p className="mt-4 max-w-sm text-white/65">
-              Spin a beating heart, watch lungs breathe and a stomach churn — and learn what each organ does for
-              you every day.
+              Spin a beating heart, watch lungs breathe and a stomach churn —
+              and learn what each organ does for you every day.
             </p>
             <Link
               href="/body"
@@ -244,7 +229,10 @@ function BodyTeaser() {
                 >
                   <span
                     className="size-2.5 shrink-0 rounded-full transition group-hover:scale-150"
-                    style={{ background: o.color, boxShadow: `0 0 12px ${o.color}` }}
+                    style={{
+                      background: o.color,
+                      boxShadow: `0 0 12px ${o.color}`,
+                    }}
                   />
                   {o.name}
                 </Link>
@@ -259,9 +247,21 @@ function BodyTeaser() {
 
 function ColorOrbs() {
   const orbs = [
-    { color: months[9].theme.accent, className: "right-[-6rem] top-[-4rem] size-72 sm:size-96", dur: 14 },
-    { color: months[0].theme.accent, className: "right-[20%] top-[40%] size-40 sm:size-56", dur: 18 },
-    { color: months[4].theme.accent, className: "right-[-3rem] bottom-[-2rem] size-48", dur: 16 },
+    {
+      color: months[9].theme.accent,
+      className: "right-[-6rem] top-[-4rem] size-72 sm:size-96",
+      dur: 14,
+    },
+    {
+      color: months[0].theme.accent,
+      className: "right-[20%] top-[40%] size-40 sm:size-56",
+      dur: 18,
+    },
+    {
+      color: months[4].theme.accent,
+      className: "right-[-3rem] bottom-[-2rem] size-48",
+      dur: 16,
+    },
   ];
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -270,7 +270,11 @@ function ColorOrbs() {
           key={i}
           className={`absolute rounded-full opacity-25 blur-3xl ${o.className}`}
           style={{ background: o.color }}
-          animate={{ x: [0, 30, -20, 0], y: [0, -25, 15, 0], scale: [1, 1.1, 0.95, 1] }}
+          animate={{
+            x: [0, 30, -20, 0],
+            y: [0, -25, 15, 0],
+            scale: [1, 1.1, 0.95, 1],
+          }}
           transition={{ duration: o.dur, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
@@ -288,13 +292,31 @@ function RotatingBadge() {
     >
       <svg viewBox="0 0 200 200" className="size-full">
         <defs>
-          <path id="badge-circle" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" />
+          <path
+            id="badge-circle"
+            d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"
+          />
         </defs>
         <circle cx="100" cy="100" r="98" fill="var(--ink)" />
-        <text fill="var(--paper)" fontSize="17" fontFamily="var(--font-poppins)" letterSpacing="5">
-          <textPath href="#badge-circle">CALENDAR · QUIZ · STARS · HEALTH ·</textPath>
+        <text
+          fill="var(--paper)"
+          fontSize="17"
+          fontFamily="var(--font-poppins)"
+          letterSpacing="5"
+        >
+          <textPath href="#badge-circle">
+            CALENDAR · QUIZ · STARS · HEALTH ·
+          </textPath>
         </text>
-        <text x="100" y="114" textAnchor="middle" fontSize="44" fill="var(--paper)" fontFamily="var(--font-playfair)" fontStyle="italic">
+        <text
+          x="100"
+          y="114"
+          textAnchor="middle"
+          fontSize="44"
+          fill="var(--paper)"
+          fontFamily="var(--font-playfair)"
+          fontStyle="italic"
+        >
           ✦
         </text>
       </svg>

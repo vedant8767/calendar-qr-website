@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Brain, Cake, ChevronLeft, ChevronRight, PersonStanding, Sparkles } from "lucide-react";
+import { ArrowRight, Brain, Cake, ChevronLeft, ChevronRight, Heart, PersonStanding, Sparkles } from "lucide-react";
 import { buildMonthGrid, eventsOnDay, months, themeStyle, typeLabels, YEAR } from "@/lib/months";
+import { personalDaysOn } from "@/lib/doctor";
 import { getGreeting, greetingsOnDay } from "@/lib/egreets";
 import { useToday } from "@/lib/useToday";
 import EGreetDialog from "./EGreetDialog";
@@ -180,6 +181,7 @@ function CalendarCard({ month, selected, onSelect, todayDay, onGreet }) {
   const weeks = buildMonthGrid(YEAR, month.index);
   const events = selected ? eventsOnDay(month, selected) : [];
   const greetings = selected ? greetingsOnDay(YEAR, month.index, selected) : [];
+  const personal = selected ? personalDaysOn(month.index, selected) : [];
 
   return (
     <motion.section
@@ -190,16 +192,19 @@ function CalendarCard({ month, selected, onSelect, todayDay, onGreet }) {
       className="rounded-[2rem] border border-line bg-white p-4 shadow-sm sm:p-6"
       aria-label={`${month.name} ${YEAR} calendar`}
     >
-      <div className="mb-4 flex items-baseline justify-between px-1">
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-1">
         <h2 className="font-display text-xl font-semibold">
           {month.name} <span className="text-muted">{YEAR}</span>
         </h2>
-        <div className="flex items-center gap-3 text-xs text-muted">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
           <p className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-accent" /> Health day
           </p>
           <p className="flex items-center gap-1.5">
             <Sparkles className="size-3 text-amber-500" /> E-greet
+          </p>
+          <p className="flex items-center gap-1.5">
+            <Heart className="size-3 fill-rose-500 text-rose-500" /> Personal
           </p>
         </div>
       </div>
@@ -219,6 +224,8 @@ function CalendarCard({ month, selected, onSelect, todayDay, onGreet }) {
           if (!day) return <div key={`pad-${i}`} />;
           const dayEvents = eventsOnDay(month, day);
           const dayGreetings = greetingsOnDay(YEAR, month.index, day);
+          const dayPersonal = personalDaysOn(month.index, day);
+          const labels = [...dayPersonal.map((p) => p.label), ...dayEvents.map((e) => e.title), ...dayGreetings.map((g) => g.title)];
           const hasSingle = dayEvents.some((e) => !e.endDay);
           const hasRange = dayEvents.some((e) => e.endDay);
           const isSunday = i % 7 === 0;
@@ -228,16 +235,18 @@ function CalendarCard({ month, selected, onSelect, todayDay, onGreet }) {
             <button
               key={day}
               type="button"
-              disabled={!dayEvents.length && !dayGreetings.length}
+              disabled={!labels.length}
               onClick={() => onSelect(isSelected ? null : day)}
               aria-pressed={isSelected}
-              aria-label={`${day} ${month.name}${dayEvents.length + dayGreetings.length ? `: ${[...dayEvents, ...dayGreetings].map((e) => e.title).join(", ")}` : ""}`}
+              aria-label={`${day} ${month.name}${labels.length ? `: ${labels.join(", ")}` : ""}`}
               className={`relative grid aspect-square place-items-center rounded-2xl text-[15px] tabular-nums transition sm:text-base ${
                 hasSingle
                   ? "cursor-pointer bg-accent font-semibold text-white hover:brightness-110"
                   : hasRange
                     ? "cursor-pointer bg-accent-soft font-medium text-accent-deep hover:brightness-95"
-                    : dayGreetings.length
+                    : dayPersonal.length
+                      ? "cursor-pointer bg-rose-50 font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100"
+                      : dayGreetings.length
                       ? "cursor-pointer bg-amber-50 font-semibold text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100"
                       : isSunday
                         ? "text-accent"
@@ -258,6 +267,9 @@ function CalendarCard({ month, selected, onSelect, todayDay, onGreet }) {
               {dayGreetings.length > 0 && (
                 <Sparkles className="absolute left-1 top-1 size-3 text-amber-400" aria-hidden />
               )}
+              {dayPersonal.length > 0 && (
+                <Heart className="absolute bottom-1 right-1 size-3 fill-rose-500 text-rose-500" aria-hidden />
+              )}
               {dayEvents.length > 1 && (
                 <span className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-ink text-[9px] font-bold text-white">
                   {dayEvents.length}
@@ -270,7 +282,7 @@ function CalendarCard({ month, selected, onSelect, todayDay, onGreet }) {
 
       <div className="mt-4 min-h-14">
         <AnimatePresence mode="wait" initial={false}>
-          {events.length || greetings.length ? (
+          {events.length || greetings.length || personal.length ? (
             <motion.div
               key={selected}
               initial={{ opacity: 0, y: 8 }}
@@ -279,6 +291,14 @@ function CalendarCard({ month, selected, onSelect, todayDay, onGreet }) {
               transition={{ duration: 0.2 }}
               className="space-y-2"
             >
+              {personal.map((p) => (
+                <PersonalRow
+                  key={p.label}
+                  occasion={p}
+                  when={`${WEEKDAYS[new Date(YEAR, month.index, selected).getDay()]}, ${selected} ${month.short}`}
+                  onGreet={onGreet}
+                />
+              ))}
               {events.map((e) => (
                 <a
                   key={e.title}
@@ -459,6 +479,35 @@ function MonthStrip({ current }) {
         ))}
       </ul>
     </nav>
+  );
+}
+
+function PersonalRow({ occasion, when, onGreet }) {
+  const greeting = occasion.greeting && getGreeting(occasion.greeting);
+  const body = (
+    <>
+      <span>
+        <span className="font-mono text-xs text-rose-700">
+          {when}
+          {occasion.milestone && ` · ${occasion.milestone}`}
+        </span>
+        <span className="block font-semibold">{occasion.label}</span>
+        {greeting && <span className="block text-xs text-muted">Tap to make a {greeting.title.toLowerCase()} e-greet</span>}
+      </span>
+      {greeting ? (
+        <Cake className="size-4 shrink-0 text-rose-500 transition group-hover:scale-125" />
+      ) : (
+        <Heart className="size-4 shrink-0 fill-rose-500 text-rose-500" />
+      )}
+    </>
+  );
+  const cls = "group flex w-full items-center justify-between gap-3 rounded-2xl bg-rose-50 px-4 py-3 text-left text-sm";
+  return greeting ? (
+    <button type="button" onClick={() => onGreet(greeting)} className={`${cls} transition hover:bg-rose-100`}>
+      {body}
+    </button>
+  ) : (
+    <div className={cls}>{body}</div>
   );
 }
 

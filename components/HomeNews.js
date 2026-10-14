@@ -10,8 +10,8 @@ export default async function HomeNews() {
 
   return (
     <section className="mx-auto mt-16 max-w-6xl px-4 sm:px-6" aria-labelledby="news-heading">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <h2 id="news-heading" className="font-display text-4xl font-semibold leading-none sm:text-5xl">
+      <div className="mb-6 flex items-baseline justify-between gap-4">
+        <h2 id="news-heading" className="min-w-0 whitespace-nowrap font-display text-[clamp(1.5rem,7vw,3rem)] font-semibold leading-none">
           Today in <span className="italic text-muted">health.</span>
         </h2>
         <Link

@@ -7,6 +7,7 @@ import { elements, findSign, signs } from "@/lib/zodiac";
 import { months, YEAR } from "@/lib/months";
 import { useToday } from "@/lib/useToday";
 import BirthdayTwins from "./BirthdayTwins";
+import { doctor } from "@/lib/doctor";
 
 const OUTLOOK_TABS = [
   { key: "love", label: "Love", icon: Heart },
@@ -23,10 +24,17 @@ function turn(from, to) {
 export default function HoroscopeExplorer() {
   const today = useToday();
   const todaySign = today ? findSign(today.month + 1, today.day) : null;
-  const [picked, setPicked] = useState(null);
+  // Start on the doctor's own sign.
+  const [picked, setPicked] = useState(() => {
+    const [d, m] = doctor.dob.split("/").map(Number);
+    return findSign(m, d)?.slug ?? null;
+  });
   const [rotation, setRotation] = useState(null);
   const [filter, setFilter] = useState("All");
-  const [dob, setDob] = useState({ month: "", day: "", year: "" });
+  const [dob, setDob] = useState(() => {
+    const [day, month, year] = doctor.dob.split("/").map(Number);
+    return { month: String(month), day: String(day), year: String(year) };
+  });
   const dobValid = dob.month && dob.day && Number(dob.day) <= daysIn(Number(dob.month), dob.year ? Number(dob.year) : undefined);
 
   const sign = signs.find((s) => s.slug === picked) ?? todaySign ?? signs[0];
